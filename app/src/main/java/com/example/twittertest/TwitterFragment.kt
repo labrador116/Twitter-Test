@@ -8,17 +8,18 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.twitter_fragment.*
 import kotlinx.android.synthetic.main.twitter_item_video.*
 
 class TwitterFragment : Fragment() {
 
     val listItems by lazy { mutableListOf(
-        Pair("https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-mp4-file.mp4", 0L),
-        Pair("https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-mp4-file.mp4", 0L),
-        Pair("https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-mp4-file.mp4", 0L),
-        Pair("https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-mp4-file.mp4", 0L),
-        Pair("https://i.gifer.com/YHD8.gif", 0L)
+        VideoItem("https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-mp4-file.mp4"),
+        VideoItem("https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-mp4-file.mp4"),
+        VideoItem("https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-mp4-file.mp4"),
+        VideoItem("https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-mp4-file.mp4"),
+        VideoItem("https://i.gifer.com/YHD8.gif")
     ) }
     val adapter by lazy { TwitterAdapter(listItems, context!!) }
 
@@ -35,21 +36,9 @@ class TwitterFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        recycle.layoutManager = LinearLayoutManager(context)
+        val layoutManager = LinearLayoutManager(context)
+        recycle.layoutManager = layoutManager
         recycle.adapter = adapter
-    }
-
-    override fun onResume() {
-        super.onResume()
-        val videoPosition = arguments?.getLong("video_position")
-        if (videoPosition != null && videoPosition > 0) {
-            val url = arguments?.getString("link")
-            val position = arguments?.getInt("position")
-            if (!url.isNullOrEmpty()) {
-                position?.let { listItems.set(it, Pair(url, videoPosition)) }
-                position?.let { adapter.notifyItemChanged(it) }
-            }
-        }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -59,7 +48,7 @@ class TwitterFragment : Fragment() {
             val position = data?.getIntExtra("position", 0)
             val videoPosition = data?.getLongExtra("video_position", 0)
             if (position != null && !link.isNullOrEmpty() && videoPosition != null) {
-                listItems[position] = Pair(link, videoPosition)
+                listItems[position] = VideoItem(link, videoPosition)
                 adapter.notifyItemChanged(position)
             }
         }

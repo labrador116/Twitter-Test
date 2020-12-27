@@ -8,6 +8,7 @@ import android.os.FileUtils
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.ViewTreeObserver
 import android.widget.ImageView
 import androidx.core.view.doOnDetach
 import androidx.recyclerview.widget.RecyclerView
@@ -27,7 +28,9 @@ import kotlinx.android.synthetic.main.twitter_item_video.view.*
 import java.io.File
 
 
-class TwitterAdapter(private val listUrls: MutableList<Pair<String, Long>>, private val context: Context) :
+data class VideoItem(val url: String, val videoPosition:Long = 0)
+
+class TwitterAdapter(private val listUrls: MutableList<VideoItem>, private val context: Context) :
     RecyclerView.Adapter<TwitterViewHolder>() {
     private val bandwidthMeter by lazy { DefaultBandwidthMeter.Builder(context).build() }
     private val agent by lazy { Util.getUserAgent(context, "streamlayer") }
@@ -45,29 +48,44 @@ class TwitterAdapter(private val listUrls: MutableList<Pair<String, Long>>, priv
 
         val player = SimpleExoPlayer.Builder(context).build()
         holder.player.player = player
-        val streamUri = MediaItem.Builder().setUri(Uri.parse(listUrls[position].first))
+        val streamUri = MediaItem.Builder().setUri(Uri.parse(listUrls[position].url))
         streamUri.setMimeType(MimeTypes.APPLICATION_MP4)
+        val cacheDir = File(context.cacheDir.absolutePath+"/"+position)
+        val cache = SimpleCache(
+            cacheDir,
+            LeastRecentlyUsedCacheEvictor(100 * 1024 * 1024),
+            ExoDatabaseProvider(context)
+        )
         val mediaSource = ProgressiveMediaSource.Factory(
-            defaultDataSourceFactory()
+            CacheDataSource.Factory().setCache(cache)
+                .setUpstreamDataSourceFactory(defaultDataSourceFactory())
+                .setFlags(CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR)
         ).createMediaSource(streamUri.build())
         player.setMediaSource(mediaSource)
         player.prepare()
 
-        if (listUrls[position].second > 0){
+        if (listUrls[position].videoPosition > 0){
             player.setMediaSource(mediaSource)
             player.prepare()
-            player.seekTo(listUrls[position].second)
+            player.seekTo(listUrls[position].videoPosition)
             player.playWhenReady = true
+        }
+
+        holder.itemView.viewTreeObserver.addOnScrollChangedListener {
+           if (!holder.itemView.isShown){
+               player.pause()
+           }
         }
 
         holder.resizeButton.setOnClickListener {
             context as MainActivity
             val intent = Intent(context, FullScreenVideoActivity::class.java)
-            intent.putExtra("link", listUrls[position].first)
+            intent.putExtra("link", listUrls[position].url)
             intent.putExtra("position", position)
             intent.putExtra("video_position", player?.currentPosition)
             context.supportFragmentManager.findFragmentByTag("twitter_fragment")?.startActivityForResult(intent, 777)
             player.pause()
+            cache.release()
         }
     }
 
