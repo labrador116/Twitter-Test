@@ -12,7 +12,7 @@ import kotlinx.android.synthetic.main.twitter_fragment.*
 
 class TwitterFragment : Fragment() {
 
-    val listItems by lazy {
+    private val listItems by lazy {
         mutableListOf(
             VideoItem(
                 "https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-mp4-file.mp4",
