@@ -38,9 +38,8 @@ class FullScreenVideoActivity : AppCompatActivity() {
 
     override fun onStart() {
         super.onStart()
-        val url = intent.getStringExtra("link")
-        val position = intent.getIntExtra("position", 0)
-        val videoPosition = intent.getLongExtra("video_position", 0)
+        val url = intent.getStringExtra(TwitterAdapter.CONTENT_LINK)
+        val videoPosition = intent.getLongExtra(TwitterAdapter.VIDEO_POSITION, 0)
         val streamUri = MediaItem.Builder().setUri(Uri.parse(url))
         player_view.player = player
         streamUri.setMimeType(MimeTypes.APPLICATION_MP4)
@@ -57,7 +56,7 @@ class FullScreenVideoActivity : AppCompatActivity() {
         player.playWhenReady = true
 
         resize_button.setOnClickListener {
-            intent.putExtra("video_position", player.currentPosition)
+            intent.putExtra(TwitterAdapter.VIDEO_POSITION, player.currentPosition)
             setResult(RESULT_OK, intent)
             finish()
         }
@@ -67,6 +66,23 @@ class FullScreenVideoActivity : AppCompatActivity() {
         super.onStop()
         player.release()
         cache.release()
+    }
+
+    override fun onSaveInstanceState(outState: Bundle, outPersistentState: PersistableBundle) {
+        super.onSaveInstanceState(outState, outPersistentState)
+        outState.putLong(TwitterAdapter.VIDEO_POSITION, player.currentPosition)
+    }
+
+    override fun onRestoreInstanceState(savedInstanceState: Bundle) {
+        super.onRestoreInstanceState(savedInstanceState)
+        val videoPosition = savedInstanceState.getLong(TwitterAdapter.VIDEO_POSITION)
+        player.seekTo(videoPosition)
+    }
+
+    override fun onBackPressed() {
+        intent.putExtra(TwitterAdapter.VIDEO_POSITION, player.currentPosition)
+        setResult(RESULT_OK, intent)
+        finish()
     }
 
     private fun defaultDataSourceFactory(): DefaultDataSourceFactory =

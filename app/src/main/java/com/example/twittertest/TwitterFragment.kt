@@ -8,20 +8,35 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.twitter_fragment.*
-import kotlinx.android.synthetic.main.twitter_item_video.*
 
 class TwitterFragment : Fragment() {
 
-    val listItems by lazy { mutableListOf(
-        VideoItem("https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-mp4-file.mp4"),
-        VideoItem("https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-mp4-file.mp4"),
-        VideoItem("https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-mp4-file.mp4"),
-        VideoItem("https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-mp4-file.mp4"),
-        VideoItem("https://i.gifer.com/YHD8.gif")
-    ) }
-    val adapter by lazy { TwitterAdapter(listItems, context!!) }
+    val listItems by lazy {
+        mutableListOf(
+            VideoItem(
+                "https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-mp4-file.mp4",
+                "https://file-examples-com.github.io/uploads/2017/10/file_example_JPG_100kB.jpg"
+            ),
+            VideoItem(
+                "https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-mp4-file.mp4",
+                "https://file-examples-com.github.io/uploads/2017/10/file_example_JPG_100kB.jpg"
+            ),
+            VideoItem(
+                "https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-mp4-file.mp4",
+                "https://file-examples-com.github.io/uploads/2017/10/file_example_JPG_100kB.jpg"
+            ),
+            VideoItem(
+                "https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-mp4-file.mp4",
+                "https://file-examples-com.github.io/uploads/2017/10/file_example_JPG_100kB.jpg"
+            ),
+            VideoItem(
+                "https://i.gifer.com/YHD8.gif",
+                "https://file-examples-com.github.io/uploads/2017/10/file_example_JPG_100kB.jpg"
+            )
+        )
+    }
+    private val adapter by lazy { context?.let { TwitterAdapter(listItems, it) } }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,13 +58,14 @@ class TwitterFragment : Fragment() {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == 777 && resultCode == Activity.RESULT_OK){
-            val link = data?.getStringExtra("link")
-            val position = data?.getIntExtra("position", 0)
-            val videoPosition = data?.getLongExtra("video_position", 0)
-            if (position != null && !link.isNullOrEmpty() && videoPosition != null) {
-                listItems[position] = VideoItem(link, videoPosition)
-                adapter.notifyItemChanged(position)
+        if (requestCode == 777 && resultCode == Activity.RESULT_OK) {
+            val link = data?.getStringExtra(TwitterAdapter.CONTENT_LINK)
+            val thumbLink = data?.getStringExtra(TwitterAdapter.THUMB_LINK)
+            val position = data?.getIntExtra(TwitterAdapter.ITEM_POSITION, 0)
+            val videoPosition = data?.getLongExtra(TwitterAdapter.VIDEO_POSITION, 0)
+            if (position != null && !link.isNullOrEmpty() && !thumbLink.isNullOrEmpty() && videoPosition != null) {
+                listItems[position] = VideoItem(link, thumbLink, videoPosition)
+                adapter?.notifyItemChanged(position)
             }
         }
     }
